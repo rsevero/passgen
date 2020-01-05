@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
+import sys, gettext, getopt
 from os import listdir
 from os.path import isfile, join
-import gettext
 from pprint import pprint
 
 #locale.setlocale(locale.LC_ALL, '')
@@ -10,6 +10,20 @@ gettext.textdomain('passgen')
 _ = gettext.gettext
 
 dictionary_path = "./dictionaries/"
+
+number_of_tokens = 7
+token_types_to_use = ["words", "numbers", "special_chars"]
+short_options = "hnNsSwWi:e:"
+long_options = ("help",
+	"numbers",
+	"no-numbers",
+	"words",
+	"no-words",
+	"special",
+	"no-special",
+	"include-language=",
+	"exclude-language=",
+)
 
 languages = [
 	{
@@ -34,8 +48,65 @@ languages = [
 	},
 ]
 
-available_languages = sorted(languages, key=lambda k: k['name'])
-pprint(available_languages)
+languages = sorted(languages, key=lambda k: k['name'])
+
+
+def help():
+	available_languages = '\t\t\tLanguage\tCode\n\n'
+	for language in languages:
+		spaces = ' '* (8 - len(language['name']))
+		available_languages += '''\t\t\t{0}{1}\t{2}\n'''.format(
+			language['name'],
+			spaces,
+			language['code']
+		)
+	help_message = '''
+Usage:
+
+	{0} [-e LANG_LIST|-i LANG_LIST] [-h] [-n|-N] [-s|-S] [-w|-W]
+
+		-e LANG_LIST      exclude the languages listed in LANG_LIST when creating word tokens. All languages not present in this option will be used. LANG_LIST should be a comma separated list of language two letter codes. See LANGUAGES CODES below. If both -e and -i options are present, only the last one is effective.
+		-h                show this help message
+		-i LANG_LIST      include the languages listed in LANG_LIST when creating word tokens. Only the languages present in this option will be used. LANG_LIST should be a comma separated list of language two letter codes. See LANGUAGES CODES below. If both -e and -i options are present, only the last one is effective.
+		-n --numbers      include number tokens in generated password (DEFAULT)
+		-N --no-numbers   don't include number tokens in generated password
+		-s --special      include special character tokens in generated password (DEFAULT)
+		-S --no-special   don't include special character tokens in generated password
+		-w --words        include word tokens in generated password (DEFAULT)
+		-W --no-words     don't include word tokens in generated password
+
+
+		LANGUAGE CODES
+
+		Codes for the languages available at passgen:
+
+{1}
+
+	'''.format(sys.argv[0], available_languages)
+	print(help_message)
+
+
+def main(argv):
+   help()
+   try:
+      opts, args = getopt.getopt(argv, short_options, long_options)
+   except getopt.GetoptError:
+      # print 'test.py -i <inputfile> -o <outputfile>'
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         # print 'test.py -i <inputfile> -o <outputfile>'
+         sys.exit()
+      elif opt in ("-i", "--ifile"):
+         inputfile = arg
+      elif opt in ("-o", "--ofile"):
+         outputfile = arg
+   # print 'Input file is "', inputfile
+   # print 'Output file is "', outputfile
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
+
 
 # def get_file_line_count(fname):
 # 	i = -1
