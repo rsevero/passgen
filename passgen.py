@@ -85,10 +85,10 @@ def exclude_languages(langs):
 
 
 def help():
-	available_languages = '\t\t\tLanguage\tCode\n\n'
+	available_languages = '\t\tLanguage\tCode\n\n'
 	for language in languages:
 		spaces = ' '* (8 - len(language['name']))
-		available_languages += '''\t\t\t{0}{1}\t{2}\n'''.format(
+		available_languages += '''\t\t{0}{1}\t{2}\n'''.format(
 			language['name'],
 			spaces,
 			language['code']
