@@ -12,17 +12,19 @@ _ = gettext.gettext
 dictionary_path = "./dictionaries/"
 
 number_of_tokens = 7
-token_types_to_use = ["words", "numbers", "special_chars"]
+available_token_types = {"numbers", "special_chars", "words"}
+token_types_to_use = available_token_types
 short_options = "hnNsSwWi:e:"
 long_options = ("help",
-	"numbers",
+	"exclude-langs=",
+	"help",
+	"include-langs=",
 	"no-numbers",
-	"words",
-	"no-words",
-	"special",
 	"no-special",
-	"include-language=",
-	"exclude-language=",
+	"no-words",
+	"numbers",
+	"special",
+	"words",
 )
 
 languages = [
@@ -51,6 +53,37 @@ languages = [
 languages = sorted(languages, key=lambda k: k['name'])
 
 
+def get_all_available_languages():
+	all_languages = []
+	for lang in languages:
+		all_languages.append(lang["code"])
+	return all_languages
+
+
+usable_languages = get_all_available_languages()
+
+
+def include_languages(langs):
+	global usable_languages
+	langs = langs.split(',')
+	usable_languages = []
+	all_languages = set(get_all_available_languages())
+	for lang in langs:
+		lang = lang.lower()
+		if lang in all_languages:
+			usable_languages.append(lang)
+
+
+def exclude_languages(langs):
+	global usable_languages
+	langs = langs.split(',')
+	usable_languages = get_all_available_languages()
+	for lang in langs:
+		lang = lang.lower()
+		if lang in usable_languages:
+			usable_languages.remove(lang)
+
+
 def help():
 	available_languages = '\t\t\tLanguage\tCode\n\n'
 	for language in languages:
@@ -63,17 +96,17 @@ def help():
 	help_message = '''
 Usage:
 
-	{0} [-e LANG_LIST|-i LANG_LIST] [-h] [-n|-N] [-s|-S] [-w|-W]
+	{0} [-e|--exclude-langs=LANG_LIST] [-i|--include-langs=LANG_LIST] [-h] [-n|-N] [-s|-S] [-w|-W]
 
-		-e LANG_LIST      exclude the languages listed in LANG_LIST when creating word tokens. All languages not present in this option will be used. LANG_LIST should be a comma separated list of language two letter codes. See LANGUAGES CODES below. If both -e and -i options are present, only the last one is effective.
-		-h                show this help message
-		-i LANG_LIST      include the languages listed in LANG_LIST when creating word tokens. Only the languages present in this option will be used. LANG_LIST should be a comma separated list of language two letter codes. See LANGUAGES CODES below. If both -e and -i options are present, only the last one is effective.
-		-n --numbers      include number tokens in generated password (DEFAULT)
-		-N --no-numbers   don't include number tokens in generated password
-		-s --special      include special character tokens in generated password (DEFAULT)
-		-S --no-special   don't include special character tokens in generated password
-		-w --words        include word tokens in generated password (DEFAULT)
-		-W --no-words     don't include word tokens in generated password
+		-e --exclude-langs LANG_LIST   exclude the languages listed in LANG_LIST when creating word tokens. All languages not present in this option will be used. LANG_LIST should be a comma separated list of language two letter codes. See LANGUAGES CODES below. If both -e and -i options are present, only the last one is effective.
+		-h --help                      show this help message
+		-i --include-langs LANG_LIST   include the languages listed in LANG_LIST when creating word tokens. Only the languages present in this option will be used. LANG_LIST should be a comma separated list of language two letter codes. See LANGUAGES CODES below. If both -e and -i options are present, only the last one is effective.
+		-n --numbers                   include number tokens in generated password (DEFAULT)
+		-N --no-numbers                don't include number tokens in generated password
+		-s --special-chars             include special character tokens in generated password (DEFAULT)
+		-S --no-special-chars          don't include special character tokens in generated password
+		-w --words                     include word tokens in generated password (DEFAULT)
+		-W --no-words                  don't include word tokens in generated password
 
 
 		LANGUAGE CODES
@@ -87,25 +120,42 @@ Usage:
 
 
 def main(argv):
-   help()
-   try:
-      opts, args = getopt.getopt(argv, short_options, long_options)
-   except getopt.GetoptError:
-      # print 'test.py -i <inputfile> -o <outputfile>'
-      sys.exit(2)
-   for opt, arg in opts:
-      if opt == '-h':
-         # print 'test.py -i <inputfile> -o <outputfile>'
-         sys.exit()
-      elif opt in ("-i", "--ifile"):
-         inputfile = arg
-      elif opt in ("-o", "--ofile"):
-         outputfile = arg
-   # print 'Input file is "', inputfile
-   # print 'Output file is "', outputfile
+	try:
+		opts, args = getopt.getopt(argv, short_options, long_options)
+	except getopt.GetoptError:
+		help()
+		sys.exit(2)
+	for opt, arg in opts:
+		if opt in ('-e', '--exclude-langs'):
+			exclude_languages(arg)
+		elif opt in ("-h", "--help"):
+			help()
+			sys.exit()
+		elif opt in ("-i", "--include-langs"):
+			include_languages(arg)
+		elif opt in ("-n", "--numbers"):
+			if "numbers" not in token_types_to_use:
+				token_types_to_use.add("numbers")
+		elif opt in ("-N", "--no-numbers"):
+			if "numbers" in token_types_to_use:
+				token_types_to_use.remove("numbers")
+		elif opt in ("-s", "--special-chars"):
+			if "special" not in token_types_to_use:
+				token_types_to_use.add("special")
+		elif opt in ("-S", "--no-special-chars"):
+			if "special" in token_types_to_use:
+				token_types_to_use.remove("special")
+		elif opt in ("-w", "--words"):
+			if "words" not in token_types_to_use:
+				token_types_to_use.add("words")
+		elif opt in ("-W", "--no-words"):
+			if "words" in token_types_to_use:
+				token_types_to_use.remove("words")
+	pprint(usable_languages)
+	pprint(token_types_to_use)
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+	main(sys.argv[1:])
 
 
 # def get_file_line_count(fname):
